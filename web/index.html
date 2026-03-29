@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mangrove → Aquaculture Transition Detection System</title>
+    <meta name="description" content="Real-time monitoring of mangrove to aquaculture conversion in the Godavari Delta using multi-sensor satellite data.">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ─── Header ────────────────────────────────────────────── -->
+<header class="header">
+    <div class="header-glow"></div>
+    <div class="header-content">
+        <div class="logo">
+            <div class="logo-icon">🌊</div>
+            <div>
+                <h1>MESTVN</h1>
+                <p class="subtitle">Mangrove → Aquaculture Transition Detection</p>
+            </div>
+        </div>
+        <div class="header-meta">
+            <span class="badge badge-region">📍 Godavari Delta</span>
+            <span class="badge badge-status" id="system-status">● System Ready</span>
+        </div>
+    </div>
+</header>
+
+<!-- ─── Navigation ────────────────────────────────────────── -->
+<nav class="nav">
+    <div class="nav-inner">
+        <button class="nav-btn active" data-tab="alerts">⚡ Alerts</button>
+        <button class="nav-btn" data-tab="satellite">🛰 Satellite Viewer</button>
+        <button class="nav-btn" data-tab="features">🗺 Feature Maps</button>
+        <button class="nav-btn" data-tab="timeline">📊 Stage Timeline</button>
+        <button class="nav-btn" data-tab="map">🌍 Interactive Map</button>
+        <button class="nav-btn" data-tab="analytics">📈 Analytics</button>
+        <button class="nav-btn" data-tab="accuracy">✅ Accuracy</button>
+        <button class="nav-btn" data-tab="methodology">📖 Methodology</button>
+    </div>
+</nav>
+
+<!-- ─── Main Content ──────────────────────────────────────── -->
+<main class="main">
+
+    <!-- ALERTS TAB -->
+    <section id="tab-alerts" class="tab-content active">
+        <div class="section-header">
+            <h2>⚡ Alert Feed</h2>
+            <p>Real-time stage transition alerts — event-driven, not yearly</p>
+        </div>
+        <div id="alert-list" class="alert-list">
+            <div class="loading-card">Loading alerts...</div>
+        </div>
+    </section>
+
+    <!-- SATELLITE VIEWER TAB -->
+    <section id="tab-satellite" class="tab-content">
+        <div class="section-header">
+            <h2>🛰 Satellite Viewer</h2>
+            <p>Raw and preprocessed images — before & after processing</p>
+        </div>
+        <div class="viewer-controls">
+            <label>Select Year:</label>
+            <input type="range" id="year-slider" min="2000" max="2024" value="2012" />
+            <span id="year-label" class="year-label">2012</span>
+        </div>
+        <div class="image-grid" id="satellite-grid">
+            <div class="image-card">
+                <h3>Raw RGB</h3>
+                <div class="image-placeholder" id="img-raw">
+                    <img src="" alt="Raw satellite image" />
+                </div>
+            </div>
+            <div class="image-card">
+                <h3>Detection Overlay</h3>
+                <div class="image-placeholder" id="img-detection">
+                    <img src="" alt="Detection overlay" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURE MAPS TAB -->
+    <section id="tab-features" class="tab-content">
+        <div class="section-header">
+            <h2>🗺 Feature Maps</h2>
+            <p>NDVI, MNDWI, SAR, and edge detection feature visualizations</p>
+        </div>
+        <div class="viewer-controls">
+            <label>Select Year:</label>
+            <input type="range" id="feature-year-slider" min="2000" max="2024" value="2012" />
+            <span id="feature-year-label" class="year-label">2012</span>
+        </div>
+        <div class="image-grid four-col" id="feature-grid">
+            <div class="image-card">
+                <h3>NDVI (Vegetation)</h3>
+                <div class="image-placeholder" id="img-ndvi">
+                    <img src="" alt="NDVI map" />
+                </div>
+                <div class="legend ndvi-legend">
+                    <span style="background:#d73027">Low</span>
+                    <span style="background:#fee08b">Mid</span>
+                    <span style="background:#1a9850">High</span>
+                </div>
+            </div>
+            <div class="image-card">
+                <h3>MNDWI (Water)</h3>
+                <div class="image-placeholder" id="img-mndwi">
+                    <img src="" alt="MNDWI map" />
+                </div>
+                <div class="legend mndwi-legend">
+                    <span style="background:#8c510a">Land</span>
+                    <span style="background:#f5f5f5">Mixed</span>
+                    <span style="background:#01665e">Water</span>
+                </div>
+            </div>
+            <div class="image-card">
+                <h3>SAR Backscatter</h3>
+                <div class="image-placeholder" id="img-sar">
+                    <img src="" alt="SAR map" />
+                </div>
+                <div class="legend sar-legend">
+                    <span style="background:#000">Low</span>
+                    <span style="background:#666">Mid</span>
+                    <span style="background:#fff; color:#000">High</span>
+                </div>
+            </div>
+            <div class="image-card">
+                <h3>Stage Map</h3>
+                <div class="image-placeholder" id="img-stage-feat">
+                    <img src="" alt="Stage map" />
+                </div>
+                <div class="legend stage-legend">
+                    <span style="background:#1a5e2a">S1</span>
+                    <span style="background:#c9b42c">S2</span>
+                    <span style="background:#d97b28">S3</span>
+                    <span style="background:#28b5d9">S4</span>
+                    <span style="background:#1a3fa0">S5</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TIMELINE TAB -->
+    <section id="tab-timeline" class="tab-content">
+        <div class="section-header">
+            <h2>📊 Stage Timeline</h2>
+            <p>Image-by-image stage history — each row is one image observation</p>
+        </div>
+        <div class="timeline-container" id="timeline-container">
+            <div class="loading-card">Loading timeline...</div>
+        </div>
+    </section>
+
+    <!-- MAP TAB -->
+    <section id="tab-map" class="tab-content">
+        <div class="section-header">
+            <h2>🌍 Interactive Map</h2>
+            <p>Godavari Delta — detected polygons overlaid on satellite base</p>
+        </div>
+        <div id="map" class="map-container"></div>
+        <div class="map-legend">
+            <span class="legend-item"><i style="background:#1a5e2a"></i> Mangrove</span>
+            <span class="legend-item"><i style="background:#c9b42c"></i> Degradation</span>
+            <span class="legend-item"><i style="background:#d97b28"></i> Clearing</span>
+            <span class="legend-item"><i style="background:#28b5d9"></i> Water Filling</span>
+            <span class="legend-item"><i style="background:#1a3fa0"></i> Operational Pond</span>
+        </div>
+    </section>
+
+    <!-- ANALYTICS TAB -->
+    <section id="tab-analytics" class="tab-content">
+        <div class="section-header">
+            <h2>📈 Analytics</h2>
+            <p>Temporal trends in vegetation, water, and stage transitions</p>
+        </div>
+        <div class="chart-grid">
+            <div class="chart-card">
+                <h3>NDVI Trend Over Time</h3>
+                <canvas id="chart-ndvi"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>MNDWI Trend Over Time</h3>
+                <canvas id="chart-mndwi"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Stage Classification Over Time</h3>
+                <canvas id="chart-stages"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Detection Confidence</h3>
+                <canvas id="chart-confidence"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- ACCURACY TAB -->
+    <section id="tab-accuracy" class="tab-content">
+        <div class="section-header">
+            <h2>✅ Accuracy Validation</h2>
+            <p>Comparison with Global Mangrove Watch, JRC Water, and manual verification</p>
+        </div>
+        <div class="accuracy-grid" id="accuracy-grid">
+            <div class="loading-card">Loading accuracy data...</div>
+        </div>
+    </section>
+
+    <!-- METHODOLOGY TAB -->
+    <section id="tab-methodology" class="tab-content">
+        <div class="section-header">
+            <h2>📖 Methodology</h2>
+            <p>How the detection system works</p>
+        </div>
+        <div class="methodology-content">
+            <div class="method-card">
+                <h3>🧠 Core Innovation: Biological Pathway Constraint</h3>
+                <p>Unlike traditional change detection that compares two dates, this system tracks the <strong>biological transition pathway</strong> that mangrove-to-aquaculture conversion follows:</p>
+                <div class="stage-flow">
+                    <div class="stage-box s1">S1<br>Dense Mangrove</div>
+                    <div class="arrow">→</div>
+                    <div class="stage-box s2">S2<br>Degradation</div>
+                    <div class="arrow">→</div>
+                    <div class="stage-box s3">S3<br>Clearing</div>
+                    <div class="arrow">→</div>
+                    <div class="stage-box s4">S4<br>Water Filling</div>
+                    <div class="arrow">→</div>
+                    <div class="stage-box s5">S5<br>Operational Pond</div>
+                </div>
+                <p class="highlight">Operational mode enforces sequential transitions. Historical mode allows jump transitions because multi-year epochs can miss intermediate observations.</p>
+            </div>
+
+            <div class="method-card">
+                <h3>🛰 Multi-Sensor Evidence</h3>
+                <div class="evidence-table">
+                    <table>
+                        <thead>
+                            <tr><th>Evidence</th><th>Weight</th><th>Source</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Optical</td><td>30%</td><td>NDVI, MNDWI, EVI from Landsat/S2</td></tr>
+                            <tr><td>SAR</td><td>30%</td><td>VV, VH backscatter from Sentinel-1</td></tr>
+                            <tr><td>Shape</td><td>20%</td><td>Rectangularity, edge density</td></tr>
+                            <tr><td>Persistence</td><td>20%</td><td>JRC water occurrence history</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Confidence threshold: <strong>≥ 85%</strong> for confirmed detection.</p>
+            </div>
+
+            <div class="method-card">
+                <h3>⚙ Processing Pipeline</h3>
+                <div class="pipeline-steps">
+                    <div class="pipe-step">1. AOI Definition & DEM mask</div>
+                    <div class="pipe-step">2. Satellite data acquisition (GEE)</div>
+                    <div class="pipe-step">3. Cloud masking & radiometric calibration</div>
+                    <div class="pipe-step">4. Z-score normalization per band</div>
+                    <div class="pipe-step">5. Speckle filtering (Refined Lee) for SAR</div>
+                    <div class="pipe-step">6. Feature extraction (vegetation + water + SAR + shape)</div>
+                    <div class="pipe-step">7. Stage classification with pathway constraints</div>
+                    <div class="pipe-step">8. Multi-evidence validation with FP suppression</div>
+                    <div class="pipe-step">9. Polygon extraction & alert generation</div>
+                    <div class="pipe-step">10. Accuracy validation (GMW + JRC comparison)</div>
+                </div>
+            </div>
+
+            <div class="method-card">
+                <h3>🔬 Key Formulas</h3>
+                <div class="formula-grid">
+                    <div class="formula">
+                        <strong>NDVI</strong>
+                        <code>(NIR − RED) / (NIR + RED)</code>
+                    </div>
+                    <div class="formula">
+                        <strong>MNDWI</strong>
+                        <code>(GREEN − SWIR1) / (GREEN + SWIR1)</code>
+                    </div>
+                    <div class="formula">
+                        <strong>AWEI</strong>
+                        <code>4(GREEN − SWIR) − (0.25·NIR + 2.75·SWIR2)</code>
+                    </div>
+                    <div class="formula">
+                        <strong>Speckle Filter</strong>
+                        <code>x̂ = x̄ + W(x − x̄), W = (σ² − n²)/σ²</code>
+                    </div>
+                    <div class="formula">
+                        <strong>Z-Score</strong>
+                        <code>I' = (I − μ) / σ</code>
+                    </div>
+                    <div class="formula">
+                        <strong>Confidence</strong>
+                        <code>0.3·Opt + 0.3·SAR + 0.2·Shape + 0.2·Persist</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="method-card">
+                <h3>🚀 Future Enhancements (Extensible Design)</h3>
+                <ul class="future-list">
+                    <li>🔄 CCDC temporal segmentation for breakpoint detection</li>
+                    <li>🤖 ML/DL classifier to replace rule-based stage engine</li>
+                    <li>📊 Hidden Markov Model for probabilistic state transitions</li>
+                    <li>🕸 Graph Neural Network for spatial consistency</li>
+                    <li>🌊 Tidal normalization using pyTMD/FES2014</li>
+                    <li>🌐 MODIS daily fusion for higher temporal resolution</li>
+                    <li>🔍 Pan-sharpening for improved spatial detail</li>
+                    <li>⚡ Real-time alerts</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- ─── Footer ────────────────────────────────────────────── -->
+<footer class="footer">
+    <p>Mangrove-Aquaculture Transition Detection System • Godavari Delta, AP • DIP Project</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

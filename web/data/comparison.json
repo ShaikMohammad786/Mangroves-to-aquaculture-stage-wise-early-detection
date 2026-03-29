@@ -1,0 +1,14 @@
+{
+  "before": {
+    "date": "1990-01-15",
+    "stage": 1,
+    "stage_name": "S1: Dense Mangrove",
+    "validation_score": 0.5
+  },
+  "after": {
+    "date": "2024-01-15",
+    "stage": 0,
+    "stage_name": "Unclassified",
+    "validation_score": 0.5
+  }
+}

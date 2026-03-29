@@ -1,0 +1,40 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Guangdong Mangrove-Aquaculture Zone",
+        "crs": "EPSG:32649",
+        "max_elevation_m": 10
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              112.4,
+              21.88
+            ],
+            [
+              112.52,
+              21.88
+            ],
+            [
+              112.52,
+              21.98
+            ],
+            [
+              112.4,
+              21.98
+            ],
+            [
+              112.4,
+              21.88
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

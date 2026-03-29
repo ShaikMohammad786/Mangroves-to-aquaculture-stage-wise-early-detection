@@ -1,0 +1,145 @@
+{
+  "image_stats": [
+    {
+      "date": "2024-01-15",
+      "year": 2024,
+      "sensor": "Sentinel-2 SR",
+      "stage": 0,
+      "stage_name": "Unclassified",
+      "stage_label": "Unclassified",
+      "confirmed_stage": 1,
+      "confirmed_stage_name": "S1: Dense Mangrove",
+      "confidence": 0.5,
+      "stage_probability": 0.2,
+      "stage_probabilities": {
+        "1": 0.2,
+        "2": 0.2,
+        "3": 0.2,
+        "4": 0.2,
+        "5": 0.2
+      },
+      "uncertain": true,
+      "uncertainty_reason": "low stage probability",
+      "validation_score": 0.5,
+      "mangrove_score": 0.5,
+      "water_score": 0.5,
+      "elevation_score": 0.5,
+      "sar_score": 0.5,
+      "ndvi_mean": null,
+      "mndwi_mean": null,
+      "cwi_mean": null,
+      "water_fraction_mean": null,
+      "alert_triggered": false,
+      "polygon_count": 0,
+      "stage_distribution": {},
+      "gt_validation": {
+        "available": false,
+        "reason": "polygon_matching_deferred"
+      },
+      "gmw_validation": {
+        "gmw_available": false,
+        "error": "Output of image computation is too large (6 bands for 3942210 pixels = 90.5 MiB > 80.0 MiB).\nIf this is a reduction, try specifying a larger 'tileScale' parameter."
+      },
+      "assets": {
+        "rgb": "../outputs/images/rgb_2024.png",
+        "detection": "../outputs/images/detection_2024.png",
+        "ground_truth": "../outputs/images/ground_truth_2024.png",
+        "stage": "../outputs/images/stage_2024.png",
+        "ndvi": "../outputs/features/ndvi_2024.png",
+        "mndwi": "../outputs/features/mndwi_2024.png",
+        "ndwi": "../outputs/features/ndwi_2024.png",
+        "savi": "../outputs/features/savi_2024.png",
+        "ndbi": "../outputs/features/ndbi_2024.png",
+        "awei": "../outputs/features/awei_2024.png",
+        "sar": "../outputs/features/sar_2024.png",
+        "rvi": "../outputs/features/rvi_2024.png"
+      }
+    }
+  ],
+  "yearly_stats": [
+    {
+      "date": "2024-01-15",
+      "year": 2024,
+      "sensor": "Sentinel-2 SR",
+      "stage": 0,
+      "stage_name": "Unclassified",
+      "stage_label": "Unclassified",
+      "confirmed_stage": 1,
+      "confirmed_stage_name": "S1: Dense Mangrove",
+      "confidence": 0.5,
+      "stage_probability": 0.2,
+      "stage_probabilities": {
+        "1": 0.2,
+        "2": 0.2,
+        "3": 0.2,
+        "4": 0.2,
+        "5": 0.2
+      },
+      "uncertain": true,
+      "uncertainty_reason": "low stage probability",
+      "validation_score": 0.5,
+      "mangrove_score": 0.5,
+      "water_score": 0.5,
+      "elevation_score": 0.5,
+      "sar_score": 0.5,
+      "ndvi_mean": null,
+      "mndwi_mean": null,
+      "cwi_mean": null,
+      "water_fraction_mean": null,
+      "alert_triggered": false,
+      "polygon_count": 0,
+      "stage_distribution": {},
+      "gt_validation": {
+        "available": false,
+        "reason": "polygon_matching_deferred"
+      },
+      "gmw_validation": {
+        "gmw_available": false,
+        "error": "Output of image computation is too large (6 bands for 3942210 pixels = 90.5 MiB > 80.0 MiB).\nIf this is a reduction, try specifying a larger 'tileScale' parameter."
+      },
+      "assets": {
+        "rgb": "../outputs/images/rgb_2024.png",
+        "detection": "../outputs/images/detection_2024.png",
+        "ground_truth": "../outputs/images/ground_truth_2024.png",
+        "stage": "../outputs/images/stage_2024.png",
+        "ndvi": "../outputs/features/ndvi_2024.png",
+        "mndwi": "../outputs/features/mndwi_2024.png",
+        "ndwi": "../outputs/features/ndwi_2024.png",
+        "savi": "../outputs/features/savi_2024.png",
+        "ndbi": "../outputs/features/ndbi_2024.png",
+        "awei": "../outputs/features/awei_2024.png",
+        "sar": "../outputs/features/sar_2024.png",
+        "rvi": "../outputs/features/rvi_2024.png"
+      }
+    }
+  ],
+  "available_years": [
+    2024
+  ],
+  "stage_names": {
+    "1": "S1: Dense Mangrove",
+    "2": "S2: Degradation",
+    "3": "S3: Clearing",
+    "4": "S4: Water Filling",
+    "5": "S5: Operational Pond"
+  },
+  "stage_colors": {
+    "1": "#1b7837",
+    "2": "#fee08b",
+    "3": "#d73027",
+    "4": "#4575b4",
+    "5": "#313695"
+  },
+  "aoi": {
+    "name": "Coringa Conversion Hotspot",
+    "bbox": [
+      82.22,
+      16.6,
+      82.3,
+      16.7
+    ],
+    "center_lat": 16.65,
+    "center_lon": 82.26,
+    "zoom": 13
+  }
+}

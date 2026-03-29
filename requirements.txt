@@ -1,0 +1,7 @@
+earthengine-api
+geemap
+numpy
+Pillow
+opencv-python
+scipy
+scikit-learn

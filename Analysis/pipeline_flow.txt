@@ -1,0 +1,278 @@
+================================================================================
+MANGROVE-AQUACULTURE TRANSITION DETECTION — FULL PIPELINE FLOW
+================================================================================
+
+This document traces every function call in the pipeline, in execution order,
+showing what each function does and which file it lives in.
+
+================================================================================
+ENTRY POINT
+================================================================================
+
+main()                                    [main.py:499]
+  │
+  ├─ parse_args()                         [main.py:63]
+  │    └─ Parses CLI: --mode historical|operational
+  │
+  ├─ reset_static_export_flags()          [m10_web_export.py:265]
+  │    └─ Resets JRC/GLO30 export-once flags so they re-export on each run
+  │
+  ├─ initialize_aoi()                     [m00_aoi.py]
+  │    └─ Creates ee.Geometry.Rectangle from config.AOI bounds
+  │    └─ Returns {"geometry": aoi, "name": ..., "bbox": ...}
+  │
+  ├─ export_aoi_geojson()                 [m00_aoi.py]
+  │    └─ Saves AOI boundary as GeoJSON to outputs/
+  │
+  ├─ acquire_all(aoi)                     [m01_acquisition.py:183]
+  │    │
+  │    ├─ get_landsat5(aoi)               [m01_acquisition.py:39]
+  │    │    └─ _get_landsat(dataset_id, aoi, start, end, name)  [m01_acquisition.py:29]
+  │    │         └─ Loads LANDSAT/LT05/C02/T1_L2, filters by bounds/date/dry-season
+  │    │
+  │    ├─ get_landsat7(aoi)               [m01_acquisition.py:47]
+  │    │    └─ _get_landsat(...)           [m01_acquisition.py:29]
+  │    │         └─ Loads LANDSAT/LE07/C02/T1_L2
+  │    │
+  │    ├─ get_hls_l30(aoi)                [m01_acquisition.py:64]
+  │    │    └─ Loads NASA/HLS/HLSL30/v002 (Landsat-based HLS)
+  │    │
+  │    ├─ get_hls_s30(aoi)                [m01_acquisition.py:74]
+  │    │    └─ Loads NASA/HLS/HLSS30/v002 (Sentinel-2-based HLS)
+  │    │
+  │    ├─ get_sentinel1(aoi)              [m01_acquisition.py:101]
+  │    │    └─ Loads COPERNICUS/S1_GRD, filters IW/DESCENDING/VV+VH
+  │    │
+  │    ├─ get_jrc_water(aoi)              [m01_acquisition.py:119]
+  │    │    └─ Loads JRC/GSW1_4/GlobalSurfaceWater (static)
+  │    │
+  │    ├─ get_jrc_monthly(aoi)            [m01_acquisition.py:125]
+  │    │    └─ Loads JRC/GSW1_4/MonthlyHistory (time series)
+  │    │
+  │    ├─ get_glo30(aoi)                  [m01_acquisition.py:136]
+  │    │    └─ Loads COPERNICUS/DEM/GLO30 DEM
+  │    │
+  │    ├─ get_mangrove_baseline(aoi)      [m01_acquisition.py:154]
+  │    │    └─ Loads GMW_V3 Global Mangrove Watch
+  │    │
+  │    └─ get_soilgrids(aoi)              [m01_acquisition.py:165]
+  │         └─ Loads ISRIC SoilGrids sand/SOC (if enabled)
+  │
+  ├─ build_image_stream(data, aoi, mode)  [main.py:271]
+  │    │
+  │    └─► _build_historical_stream(data, aoi)  [main.py:113]
+  │         │
+  │         │  For each epoch (1988, 2017, 2022):
+  │         │
+  │         ├─ data[sensor].filterDate(start, end)   [GEE server-side]
+  │         │    └─ Expands ±1 year window, filters dry season (Nov-Mar)
+  │         │
+  │         ├─ preprocess_optical_collection(col, sensor, aoi)
+  │         │    │                            [m02_optical_preprocess.py:204]
+  │         │    │
+  │         │    └─ collection.map(preprocessor)
+  │         │         │
+  │         │         ├─ For landsat5: _make_landsat5_preprocessor()
+  │         │         │    │                  [m02_optical_preprocess.py:128]
+  │         │         │    ├─ mask_landsat_clouds(image)   [m02:13]
+  │         │         │    │    └─ Masks QA_PIXEL bits 1,3,4 (cloud/shadow)
+  │         │         │    ├─ _rename_bands(image, "landsat5")  [m02:73]
+  │         │         │    │    └─ SR_B1→blue, SR_B2→green, etc.
+  │         │         │    └─ _scale_landsat(image)        [m02:84]
+  │         │         │         └─ DN * 0.0000275 - 0.2, clamp 0-1
+  │         │         │
+  │         │         ├─ For landsat7: _make_landsat7_preprocessor()
+  │         │         │    │                  [m02_optical_preprocess.py:139]
+  │         │         │    ├─ mask_landsat_clouds(image)   [m02:13]
+  │         │         │    ├─ _rename_bands(image, "landsat7")  [m02:73]
+  │         │         │    ├─ _scale_landsat(image)        [m02:84]
+  │         │         │    ├─ is_slc_off(image)            [m02:57]
+  │         │         │    └─ fill_slc_gaps(image)         [m02:37]
+  │         │         │         └─ Two-pass focal_median gap fill
+  │         │         │
+  │         │         └─ For hls_l30/hls_s30: _make_hls_preprocessor(sensor)
+  │         │              │                  [m02_optical_preprocess.py:159]
+  │         │              ├─ _rename_bands(image, sensor)  [m02:73]
+  │         │              ├─ divide(10000), clamp 0-1
+  │         │              └─ Fmask cloud/shadow masking (bits 1, 3)
+  │         │
+  │         ├─ harmonize_to_hls(proc, sensor, aoi)  [m02:217]
+  │         │    └─ Roy 2016 coefficients for L5/L7→OLI alignment
+  │         │
+  │         ├─ apply_ccdc(proc_with_indices, aoi)  [m06_stage_engine.py]
+  │         │    └─ CCDC temporal segmentation for break detection
+  │         │
+  │         ├─ compute_ndvi_trend(proc, aoi)       [m05_features.py:196]
+  │         │    └─ Linear regression slope of NDVI over time
+  │         │
+  │         ├─ compute_ndvi_cv(proc)               [m05_features.py:215]
+  │         │    └─ Coefficient of variation of NDVI
+  │         │
+  │         └─ create_composite(proc, aoi, method)  [m04_normalization.py:85]
+  │              │
+  │              ├─ method="median": collection.median()
+  │              ├─ method="p25": collection.reduce(Reducer.percentile([25]))
+  │              └─ normalize_image(composite, aoi)  [m04:19]
+  │                   └─ Clips to AOI (no resample/reproject)
+  │
+  └─ process_stream(stream, data, aoi_info, mode)  [main.py:303]
+       │
+       │  For each stream item (epoch):
+       │
+       ├─ [1] FEATURE EXTRACTION
+       │    │
+       │    ├─ find_closest_sar(data, date_str, aoi)  [main.py:282]
+       │    │    ├─ Filters S1 by dry season (Nov-Mar) of epoch year
+       │    │    ├─ preprocess_s1_collection(s1, aoi)  [m03_sar_preprocess.py:135]
+       │    │    │    │
+       │    │    │    └─ collection.map(preprocess_s1_image)  [m03:82]
+       │    │    │         ├─ Mask border noise (angle<29° or >46°, low dB)
+       │    │    │         ├─ db_to_linear(sar)           [m03:62]
+       │    │    │         ├─ to_gamma0(sar_linear)       [m03:70]
+       │    │    │         ├─ enhanced_lee_sigma_filter(sar_gamma0)  [m03:20]
+       │    │    │         │    └─ Adaptive speckle filter (ENL=4.4)
+       │    │    │         └─ Convert back to dB
+       │    │    │
+       │    │    ├─ compute_sar_temporal_features(s1_proc)  [m05:227]
+       │    │    │    └─ VV mean/std, VH mean, VH/VV ratio mean
+       │    │    │
+       │    │    └─ Returns (s1_proc.median(), sar_temporal)
+       │    │
+       │    └─ extract_all_features(image, sar, aoi, ...)  [m05_features.py:315]
+       │         │
+       │         ├─ extract_optical_features(image)  [m05:288]
+       │         │    ├─ compute_ndvi(image)          [m05:19]  → (nir-red)/(nir+red)
+       │         │    ├─ compute_evi(image)           [m05:23]  → 2.5*(nir-red)/(nir+6*red-7.5*blue+1)
+       │         │    ├─ compute_ndmi(image)          [m05:32]  → (nir-swir2)/(nir+swir2)
+       │         │    ├─ compute_lswi(image)          [m05:36]  → (nir-swir1)/(nir+swir1)
+       │         │    ├─ compute_ndwi(image)          [m05:44]  → (green-nir)/(green+nir)
+       │         │    ├─ compute_mndwi(image)         [m05:48]  → (green-swir1)/(green+swir1)
+       │         │    ├─ compute_awei(image)          [m05:58]  → 4*(green-swir1)-0.25*nir-2.75*swir2
+       │         │    ├─ compute_ndvi_mndwi_diff()    [m05:52]  → NDVI - MNDWI
+       │         │    ├─ compute_cmri(image)          [m05:86]  → NDVI - NDWI
+       │         │    ├─ compute_mmri(image)          [m05:95]  → |MNDWI|/(|MNDWI|+|NDVI|)
+       │         │    ├─ compute_gndvi(image)         [m05:106] → (nir-green)/(nir+green)
+       │         │    ├─ compute_ndbi(image)          [m05:114] → (swir1-nir)/(swir1+nir)
+       │         │    └─ compute_savi(image)          [m05:123] → (nir-red)*1.5/(nir+red+0.5)
+       │         │
+       │         ├─ compute_edge_density(features)   [m05:181]
+       │         │    └─ Canny edge detector on NDVI + focal mean
+       │         │
+       │         ├─ extract_sar_features(sar_image)  [m05:311]
+       │         │    └─ compute_sar_features()      [m05:139]
+       │         │         ├─ VV, VH means
+       │         │         ├─ VV/VH cross-pol ratio (dB subtraction)
+       │         │         ├─ VV texture (local stdDev)
+       │         │         ├─ RVI (4*VH_lin / (VV_lin + VH_lin))
+       │         │         └─ VV GLCM homogeneity (3x3)
+       │         │
+       │         ├─ compute_elevation_feature(glo30)  [m05:265]
+       │         │    └─ Low elevation mask, slope, TWI proxy
+       │         │
+       │         ├─ compute_water_history_features(jrc)  [m05:247]
+       │         │    └─ JRC occurrence, seasonality, change_abs
+       │         │
+       │         └─ Appends: sar_temporal, opt_temporal, soilgrids
+       │
+       ├─ precompute_sar_thresholds(features, aoi)  [m06_stage_engine.py]
+       │    └─ Computes per-image percentile thresholds for SAR bands
+       │
+       ├─ precompute_optical_thresholds(features, aoi)  [m06_stage_engine.py]
+       │    └─ Computes adaptive NDVI/MNDWI percentile thresholds
+       │
+       ├─ [2] CANDIDATE POLYGON EXTRACTION
+       │    │
+       │    └─ extract_pond_candidates(features, aoi, date)  [m07_polygons.py]
+       │         └─ Water detection → connected components → polygon extraction
+       │         └─ Returns ee.FeatureCollection of candidate pond polygons
+       │
+       ├─ [3] OBJECT FEATURE REDUCTION
+       │    │
+       │    └─ features.reduceRegions(candidates_fc, mean, scale=30)
+       │         └─ Extracts mean feature values per polygon (GEE server-side)
+       │
+       ├─ [4] ID MATCHING
+       │    │
+       │    └─ match_polygons_to_registry(pond_dicts, registry.ponds, 100.0)
+       │         │                        [m13_object_matcher.py]
+       │         └─ Matches current-epoch polygons to known pond IDs by distance
+       │
+       ├─ [5] CLASSIFICATION & LIFECYCLE
+       │    │
+       │    ├─ classify_pond_features(pond_data)    [m14_per_pond_classifier.py]
+       │    │    └─ Rule-based stage classification (S1-S5) per pond
+       │    │
+       │    ├─ compute_pond_confidence(pond_data, stage)  [m14_per_pond_classifier.py]
+       │    │    └─ Multi-evidence confidence score
+       │    │
+       │    └─ registry.register_or_update(pid, date, data)  [m12_pond_registry.py]
+       │         └─ PondRegistry: tracks stage history, persistence, transitions
+       │         └─ Returns (pond_id, confirmed_stage, alert_triggered)
+       │
+       ├─ [6] EXPORT THUMBNAILS
+       │    │
+       │    ├─ upload_painted_ponds(polygon_list, aoi)   [main.py:75]
+       │    │    └─ Creates ee.Image with pond centroids painted by stage
+       │    │
+       │    ├─ export_stage_thumbnail(stage_image, ...)  [m10_web_export.py:272]
+       │    ├─ export_rgb_thumbnail(image, ...)          [m10_web_export.py:157]
+       │    ├─ export_ndvi_thumbnail(features, ...)      [m10_web_export.py:170]
+       │    ├─ export_ndwi_thumbnail(features, ...)      [m10_web_export.py:178]
+       │    ├─ export_savi_thumbnail(features, ...)      [m10_web_export.py:195]
+       │    ├─ export_mndwi_thumbnail(features, ...)     [m10_web_export.py:203]
+       │    ├─ export_ndbi_thumbnail(features, ...)      [m10_web_export.py:211]
+       │    ├─ export_awei_thumbnail(features, ...)      [m10_web_export.py:186]
+       │    ├─ export_sar_thumbnail(sar_image, ...)      [m10_web_export.py:219] (if SAR available)
+       │    ├─ export_rvi_thumbnail(features, ...)       [m10_web_export.py:227] (if SAR available)
+       │    ├─ export_jrc_thumbnail(jrc_water, ...)      [m10_web_export.py:240] (once only)
+       │    └─ export_glo30_thumbnail(glo30, ...)        [m10_web_export.py:252] (once only)
+       │    │
+       │    └─ All export functions call:
+       │         _thumb(image, aoi, vis_params, filepath, ...)  [m10:71]
+       │              ├─ image.clip(aoi)
+       │              ├─ image.visualize(**vis_params)
+       │              ├─ Optionally blend polygon outlines
+       │              ├─ vis_image.getThumbURL(params)
+       │              └─ urllib.request.urlopen(url) → save to file
+       │
+       ├─ [7] LOG & TRACK
+       │    └─ Accumulates results, updates previous_ndvi/mndwi
+       │    └─ registry.save()             [m12_pond_registry.py]
+       │
+       └─ Returns (all_results, all_polygons)
+
+  ├─ Save pond_locations.json             [main.py:527]
+  │
+  ├─ export_all_web_data(None, all_results)  [m10_web_export.py:320]
+  │    └─ generate_stats_data(all_results)   [m10:291]
+  │         └─ Saves stats.json
+  │
+  └─ _export_dashboard_data(all_results, all_polygons)  [main.py:558]
+       ├─ Saves timeline.json
+       ├─ Saves polygons.json
+       ├─ Saves alerts.json
+       └─ Saves comparison.json
+
+
+================================================================================
+FILE INDEX
+================================================================================
+
+main.py                           — Pipeline orchestrator, CLI, stream builder
+modules/m00_aoi.py               — AOI initialization and GeoJSON export
+modules/m01_acquisition.py       — GEE data loading (Landsat, HLS, S1, JRC, DEM)
+modules/m02_optical_preprocess.py — Cloud masking, band rename, scaling, SLC fill
+modules/m03_sar_preprocess.py    — S1 border noise, Gamma0, speckle filter, dB
+modules/m04_normalization.py     — Compositing (median/p25), spatial clipping
+modules/m05_features.py          — Spectral indices, SAR features, temporal stats
+modules/m06_stage_engine.py      — Stage classification, adaptive thresholds, CCDC
+modules/m07_polygons.py          — Water detection, connected components, polygons
+modules/m08_validator.py         — Multi-evidence validation scoring
+modules/m09_alerts.py            — Alert creation and storage
+modules/m10_web_export.py        — Thumbnail download, vis params, JSON export
+modules/m11_accuracy.py          — Accuracy assessment utilities
+modules/m12_pond_registry.py     — Pond tracking, stage persistence, transitions
+modules/m13_object_matcher.py    — Spatial matching of polygons across epochs
+modules/m14_per_pond_classifier.py — Per-object stage classification & confidence
+config.py                        — All configuration (AOI, thresholds, bands, etc.)
+download_raw_images.py           — Diagnostic raw image downloader (NEW)

@@ -1,0 +1,40 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Coringa Conversion Hotspot",
+        "crs": "EPSG:32644",
+        "max_elevation_m": 10
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              82.22,
+              16.6
+            ],
+            [
+              82.3,
+              16.6
+            ],
+            [
+              82.3,
+              16.7
+            ],
+            [
+              82.22,
+              16.7
+            ],
+            [
+              82.22,
+              16.6
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

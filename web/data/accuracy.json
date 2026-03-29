@@ -1,0 +1,97 @@
+{
+  "kappa_analysis": {
+    "available": true,
+    "kappa": 0.0,
+    "overall_accuracy": 0.904,
+    "confusion_matrix": [
+      [
+        179,
+        19
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "labels": [
+      1,
+      4
+    ],
+    "n_samples": 200,
+    "per_class_f1": {
+      "S1": {
+        "precision": 1.0,
+        "recall": 0.904,
+        "f1": 0.9496
+      },
+      "S4": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "method": "gmw_independent_stratified_v2"
+  },
+  "polygon_matching": {
+    "available": false,
+    "reason": "polygon_matching_deferred"
+  },
+  "gmw": {
+    "gmw_available": true,
+    "target_year": null,
+    "true_positive": 297949.50980392157,
+    "false_positive": 0,
+    "false_negative": 17191.788235294116,
+    "true_negative": 0,
+    "overall_accuracy": 0.9454,
+    "precision": 1.0,
+    "recall": 0.9454,
+    "f1_score": 0.972,
+    "kappa": 0.0,
+    "iou": 0.9454,
+    "producers_accuracy": 0.9454,
+    "users_accuracy": 1.0,
+    "s1_gmw_agreement": 0.2984,
+    "stage_distribution": {
+      "0": 119192.6078431372,
+      "1": 998640.1843137256,
+      "4": 87292.44313725489
+    },
+    "per_stage_metrics": {
+      "0": {
+        "pixel_count": 119192,
+        "fraction": 0.3782
+      },
+      "1": {
+        "pixel_count": 998640,
+        "fraction": 3.1689
+      },
+      "4": {
+        "pixel_count": 87292,
+        "fraction": 0.277
+      }
+    }
+  },
+  "jrc": {
+    "jrc_available": true,
+    "true_positive": 12464.60392156856,
+    "false_positive": 17189.721568627494,
+    "false_negative": 113324.25098039364,
+    "true_negative": 26804.294117647256,
+    "overall_accuracy": 0.2313,
+    "precision": 0.4203,
+    "recall": 0.0991,
+    "f1_score": 0.1604,
+    "kappa": -0.1705,
+    "iou": 0.0872,
+    "s4_pixel_count": 87292.44313725489,
+    "s5_pixel_count": 0
+  },
+  "confusion_matrix": {
+    "available": false,
+    "note": "Requires manual reference points"
+  },
+  "publication_report": {
+    "generated": true
+  }
+}

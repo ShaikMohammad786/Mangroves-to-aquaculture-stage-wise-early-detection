@@ -1,0 +1,101 @@
+{
+  "classification_accuracy": {
+    "available": true,
+    "confusion_matrix": [
+      [
+        179,
+        19
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "labels": [
+      1,
+      4
+    ],
+    "n_samples": 200,
+    "overall_accuracy": 0.904,
+    "overall_accuracy_95ci": [
+      0.8552,
+      0.9375
+    ],
+    "kappa": 0.0,
+    "kappa_se": 0.0709,
+    "kappa_95ci": [
+      -0.1389,
+      0.1389
+    ],
+    "kappa_z_statistic": 0.0,
+    "kappa_p_value": 1.0,
+    "kappa_significant": false,
+    "per_class_metrics": {
+      "S1": {
+        "precision": 1.0,
+        "recall": 0.904,
+        "f1": 0.9496
+      },
+      "S4": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "method": "gmw_independent_stratified_v2"
+  },
+  "gmw_comparison": {
+    "gmw_available": true,
+    "target_year": null,
+    "true_positive": 297949.50980392157,
+    "false_positive": 0,
+    "false_negative": 17191.788235294116,
+    "true_negative": 0,
+    "overall_accuracy": 0.9454,
+    "precision": 1.0,
+    "recall": 0.9454,
+    "f1_score": 0.972,
+    "kappa": 0.0,
+    "iou": 0.9454,
+    "producers_accuracy": 0.9454,
+    "users_accuracy": 1.0,
+    "s1_gmw_agreement": 0.2984,
+    "stage_distribution": {
+      "0": 119192.6078431372,
+      "1": 998640.1843137256,
+      "4": 87292.44313725489
+    },
+    "per_stage_metrics": {
+      "0": {
+        "pixel_count": 119192,
+        "fraction": 0.3782
+      },
+      "1": {
+        "pixel_count": 998640,
+        "fraction": 3.1689
+      },
+      "4": {
+        "pixel_count": 87292,
+        "fraction": 0.277
+      }
+    }
+  },
+  "jrc_comparison": {
+    "jrc_available": true,
+    "true_positive": 12464.60392156856,
+    "false_positive": 17189.721568627494,
+    "false_negative": 113324.25098039364,
+    "true_negative": 26804.294117647256,
+    "overall_accuracy": 0.2313,
+    "precision": 0.4203,
+    "recall": 0.0991,
+    "f1_score": 0.1604,
+    "kappa": -0.1705,
+    "iou": 0.0872,
+    "s4_pixel_count": 87292.44313725489,
+    "s5_pixel_count": 0
+  },
+  "area_statistics": {},
+  "epoch_year": null,
+  "pipeline_version": "v15.0"
+}
